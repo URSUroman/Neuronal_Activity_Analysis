@@ -7151,29 +7151,29 @@ def psth_glob_sep_no_noise_pb(spikefile, motifile,n,binwidth=binwidth, fs=fs):
     normfactor_clean = np.zeros(2*len_motif_-1) #number of renditions of each syllable/gap, the noisy syll is the last in the array 
     meandurall_list_noisy = np.zeros(2*len_motif_-1) #mean duration of each syllable type and gaps
     normfactor_noisy = np.zeros(2*len_motif_-1) #number of renditions of each syllable/gap, the noisy syll is the last in the array 
-    # for i in range(2*len_motif_-1):       
-	# 	#clean versions of the syll
-    #     used_off=clean_motifs[:,i+1] # sets the offsets of which syllable to use
-    #     used_on=clean_motifs[:,i] # sets the onsets of which syllable to use
-    #     used_on=used_on[(np.where((used_off >0) == True))] #clean from case where the syllable is not sung
-    #     used_off=used_off[(np.where((used_off >0) == True))] #clean from case where the syllable is not sung
-    #     #print(used_off)
-    #     #print("\n")
-    #     #print(used_on)
-    #     #print("\n")
-    #     #print("\n")
-    #     used_on=used_on/fs
-    #     used_off=used_off/fs
-    # 
-    #     meandurall=np.mean(used_off[:]-used_on[:])
-    #     n_clean=len(used_off[:])
-    #     meandurall_list_clean[i]=meandurall
-    #     normfactor_clean[i]=len(used_off[:])
-	# 			   
-    # normfactor_mean_clean=np.mean(normfactor_clean)
-    # mean_nb_rendit_syl_clean=normfactor_mean_clean #before *binwidth, normfactor_mean is the number of motif renditions
-    # normfactor_mean_clean=normfactor_mean_clean*binwidth
-    # normfactor_clean=normfactor_clean*binwidth
+    for i in range(2*len_motif_-1):       
+		#clean versions of the syll
+        used_off=clean_motifs[:,i+1] # sets the offsets of which syllable to use
+        used_on=clean_motifs[:,i] # sets the onsets of which syllable to use
+        used_on=used_on[(np.where((used_off >0) == True))] #clean from case where the syllable is not sung
+        used_off=used_off[(np.where((used_off >0) == True))] #clean from case where the syllable is not sung
+        #print(used_off)
+        #print("\n")
+        #print(used_on)
+        #print("\n")
+        #print("\n")
+        used_on=used_on/fs
+        used_off=used_off/fs
+    
+        meandurall=np.mean(used_off[:]-used_on[:])
+        n_clean=len(used_off[:])
+        meandurall_list_clean[i]=meandurall
+        normfactor_clean[i]=len(used_off[:])
+				   
+    normfactor_mean_clean=np.mean(normfactor_clean)
+    mean_nb_rendit_syl_clean=normfactor_mean_clean #before *binwidth, normfactor_mean is the number of motif renditions
+    normfactor_mean_clean=normfactor_mean_clean*binwidth
+    normfactor_clean=normfactor_clean*binwidth
 
     #Compute normfactor_mean(the number of renditions of the motif*binwidth), mean_nb_rendit_syl for all motifs
     meandurall_list = np.zeros(2*len_motif_-1) #mean duration of each syllable type and gaps
