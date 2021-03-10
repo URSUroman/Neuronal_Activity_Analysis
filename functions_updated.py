@@ -719,13 +719,27 @@ def createsave(file):
        file = open("Channels_Label_LFP.txt", "w+")
        file.write(str(df))
        file.close()
-    
+	   
     #Create and Save Binary/.NPY files of Analog signals
     for j in range(n_analog_signals):
-        #temp=data_seg.analogsignals[j].name.split(" ")[2][1:-1] 
-        temp=data_seg.analogsignals[j].name.split(" ")[0][:] 
-        #temp=data_seg.analogsignals[j].name
-        np.save(temp, data_seg.analogsignals[j].as_array())
+        #temp=data_seg.analogsignals[j].name.split(" ")[2][1:-1]
+        bundle_len = len(data_seg.analogsignals[j].name.split(" "))
+        if(bundle_len==1):
+           np.save(data_seg.analogsignals[j].name.split(" ")[0], data_seg.analogsignals[j].as_array())
+        else:
+           list_channels_raw = data_seg.analogsignals[j].name.split(" ")[2][1:-1]
+           list_channels=list_channels_raw.split(",")
+           nb_channels=len(list_channels)
+           channels=data_seg.analogsignals[j].as_array()
+           for c in range(nb_channels):
+               np.save(list_channels[c], channels[:,c])
+    
+    ##Create and Save Binary/.NPY files of Analog signals
+    #for j in range(n_analog_signals):
+    #    #temp=data_seg.analogsignals[j].name.split(" ")[2][1:-1] 
+    #    temp=data_seg.analogsignals[j].name.split(" ")[0][:] 
+    #    #temp=data_seg.analogsignals[j].name
+    #    np.save(temp, data_seg.analogsignals[j].as_array())
     
     #Create and Save Summary about the File
     an=["File of origin: " + data.file_origin, "Number of AnalogSignals: " + str(n_analog_signals)]
