@@ -5807,7 +5807,7 @@ def psth_glob_sep(spikefile, motifile, basebeg, basend,binwidth=binwidth, fs=fs)
                step3=[]
                beg= used_on[j] #Will compute the beginning of the window
                end= used_off[j] #Will compute the end of the window
-               step1=spused[np.where(np.logical_and(spused >= begs, spused <= end) == True)]-beg
+               step1=spused[np.where(np.logical_and(spused >= beg, spused <= end) == True)]-beg
                spikes1+=[step1]
                res=res+1 #motif numer shift on y axis on raster plot
                #spikes2=spikes1
@@ -8282,8 +8282,8 @@ def corrpitch_auto(songfile, motifile, spikefile,lags, window_size=window_size,f
     song=np.load(songfile)
     finallist=sortsyls(motifile,0) 	
     fichier = open("SummaryCorrPitch.txt", "w+")
-    y=["Mean_p_A.txt","Mean_p_B.txt","Mean_p_C.txt","Mean_p_D.txt","Mean_p_E.txt","Mean_p_G.txt"]
-    Syls=["a","b","c","d","e","g"]
+    y=["Mean_p_A.txt","Mean_p_B.txt","Mean_p_C.txt","Mean_p_D.txt"]
+    Syls=["a","b","c","d"]
     check=jumpsyl(spikefile)
     for obj in range(len(finallist)):
         if Syls[obj] in check:
@@ -8831,8 +8831,8 @@ def corramplitude_auto(songfile, motifile, spikefile, fs=fs, window_size=window_
     song=np.load(songfile)
     finallist=sortsyls(motifile,0)  
     f = open("SummaryCorrAmp.txt", "w+")
-    y=["MeanA.txt","MeanB.txt","MeanC.txt","MeanD.txt","MeanE.txt","MeanG.txt"]
-    Syls=["a","b","c","d","e","g"]
+    y=["MeanA.txt","MeanB.txt","MeanC.txt","MeanD.txt"]
+    Syls=["a","b","c","d"]
     check=jumpsyl(spikefile)
     for g in range(len(finallist)):
         if Syls[g] in check:
@@ -9371,8 +9371,8 @@ def corrspectral_auto(songfile, motifile, spikefile, fs=fs, window_size=window_s
     song=np.load(songfile)
     finallist=sortsyls(motifile,0)  
     f = open("SummaryCorrSpecEnt.txt", "w+")
-    y=["MeanA.txt","MeanB.txt","MeanC.txt","MeanD.txt","MeanE.txt","MeanG.txt"]
-    Syls=["a","b","c","d","e","g"]
+    y=["MeanA.txt","MeanB.txt","MeanC.txt","MeanD.txt"]
+    Syls=["a","b","c","d"]
     check=jumpsyl(spikefile)  
     for g in range(len(finallist)):
         if Syls[g] in check:
