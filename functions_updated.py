@@ -213,7 +213,6 @@ def sortsyls(motifile,n):
     #print(finallist)
     return finallist
 
-
 ## 
 #
 # This function outputs the list of basebeg_pb and basend_pb needed for playback psth	
@@ -234,7 +233,6 @@ def baseline_playback(motifile):
     baseline_pb	=np.asarray(baseline_pb)
     return baseline_pb		
 	
-
 ## 
 #
 # This function outputs the list of onset/offsets of the white noise
@@ -396,7 +394,7 @@ def tellme(s):
     py.draw()
 
 
-def bandpass_filtfilt(rawsong, samp_freq, freq_cutoffs=(500, 15900)):
+def bandpass_filtfilt(rawsong, samp_freq, freq_cutoffs=(500, 10000)):
     """filter song audio with band pass filter, run through filtfilt
     (zero-phase filter)
 
@@ -465,29 +463,6 @@ def smoothed(inputSignal,fs=fs, smooth_win=10):
         smooth = np.sqrt(smooth)
         return smooth
  
-
-def smooth_data(rawsong, samp_freq, freq_cutoffs=None, smooth_win=10):
-
-    if freq_cutoffs is None:
-        # then don't do bandpass_filtfilt
-        filtsong = rawsong
-    else:
-        filtsong = bandpass_filtfilt(rawsong, samp_freq, freq_cutoffs)
-        #filtsong = rawsong
-
-    filtsong=filtsong.astype(np.float)
-	
-    squared_song = np.power(filtsong, 2)
-
-    len = np.round(samp_freq * smooth_win / 1000).astype(int)
-    h = np.ones((len,)) / len
-    #np.savetxt('h_20kHz.txt', h, fmt='%1.6f', delimiter='/n')
-	#np.convolve uses (M,) like arrays
-    smooth = np.convolve(squared_song, h)
-    offset = round((smooth.shape[-1] - filtsong.shape[-1]) / 2)
-    smooth = smooth[offset:filtsong.shape[-1] + offset]
-    return smooth
-
 
 #Fast loop to check visually if the syllables are ok. I've been finding problems in A syllables, so I recommend checking always before analysis.
 def checksyls(songfile,motifile, beg, end):
@@ -559,16 +534,16 @@ def jumpsyl(spikefile):
 def read(file):
     reader = neo.io.Spike2IO(filename=file) #This command will read the file defined above
     #reader = neo.io.RawBinarySignalIO(filename=file)
+	
     data = reader.read()[0] #This will get the block of data of interest inside the file
     data_seg=data.segments[0] #This will get all the segments
+	
     #an_sig=data_seg.analogsignals
     #print((data_seg.analogsignals[0].as_array()).shape)
     #print(data_seg.unit_channels[0])
 
     return data, data_seg
 
-
-	
 ## 
 #
 # This  function will allow you to get information inside the .smr file.
@@ -864,9 +839,7 @@ def createsave_tetr(file):
     os.chdir("..")
     print("\n"+"All files were created!")
 		
-
-
-		
+	
 ## 
 #
 # Plots the spike shapes during baseline and during motifs. Raw and average spike shapes from filtered and unfiltered LFP
@@ -8282,8 +8255,8 @@ def corrpitch_auto(songfile, motifile, spikefile,lags, window_size=window_size,f
     song=np.load(songfile)
     finallist=sortsyls(motifile,0) 	
     fichier = open("SummaryCorrPitch.txt", "w+")
-    y=["Mean_p_A.txt","Mean_p_B.txt","Mean_p_C.txt","Mean_p_D.txt"]
-    Syls=["a","b","c","d"]
+    y=["Mean_p_A.txt","Mean_p_B.txt","Mean_p_C.txt","Mean_p_D.txt","Mean_p_E.txt","Mean_p_G.txt"]
+    Syls=["a","b","c","d","e","g"]
     check=jumpsyl(spikefile)
     for obj in range(len(finallist)):
         if Syls[obj] in check:
@@ -8831,8 +8804,8 @@ def corramplitude_auto(songfile, motifile, spikefile, fs=fs, window_size=window_
     song=np.load(songfile)
     finallist=sortsyls(motifile,0)  
     f = open("SummaryCorrAmp.txt", "w+")
-    y=["MeanA.txt","MeanB.txt","MeanC.txt","MeanD.txt"]
-    Syls=["a","b","c","d"]
+    y=["MeanA.txt","MeanB.txt","MeanC.txt","MeanD.txt","MeanE.txt","MeanG.txt"]
+    Syls=["a","b","c","d","e","g"]
     check=jumpsyl(spikefile)
     for g in range(len(finallist)):
         if Syls[g] in check:
@@ -9371,8 +9344,8 @@ def corrspectral_auto(songfile, motifile, spikefile, fs=fs, window_size=window_s
     song=np.load(songfile)
     finallist=sortsyls(motifile,0)  
     f = open("SummaryCorrSpecEnt.txt", "w+")
-    y=["MeanA.txt","MeanB.txt","MeanC.txt","MeanD.txt"]
-    Syls=["a","b","c","d"]
+    y=["MeanA.txt","MeanB.txt","MeanC.txt","MeanD.txt","MeanE.txt","MeanG.txt"]
+    Syls=["a","b","c","d","e","g"]
     check=jumpsyl(spikefile)  
     for g in range(len(finallist)):
         if Syls[g] in check:
