@@ -78,6 +78,7 @@ def read_syllable_list(syllable_list):
     global idx_noisy_syb
     global len_motif
     global noise_p
+    reset_vars()
     #Is there song, with or without noise, is there playback
     syllables= open(syllable_list, "r")
     syllablesr= syllables.read().splitlines()
@@ -213,6 +214,7 @@ def sortsyls(motifile,n):
     #print(finallist)
     return finallist
 
+
 ## 
 #
 # This function outputs the list of basebeg_pb and basend_pb needed for playback psth	
@@ -233,6 +235,7 @@ def baseline_playback(motifile):
     baseline_pb	=np.asarray(baseline_pb)
     return baseline_pb		
 	
+
 ## 
 #
 # This function outputs the list of onset/offsets of the white noise
@@ -394,7 +397,7 @@ def tellme(s):
     py.draw()
 
 
-def bandpass_filtfilt(rawsong, samp_freq, freq_cutoffs=(500, 10000)):
+def bandpass_filtfilt(rawsong, samp_freq, freq_cutoffs=(500, 15900)):
     """filter song audio with band pass filter, run through filtfilt
     (zero-phase filter)
 
@@ -463,6 +466,29 @@ def smoothed(inputSignal,fs=fs, smooth_win=10):
         smooth = np.sqrt(smooth)
         return smooth
  
+
+def smooth_data(rawsong, samp_freq, freq_cutoffs=None, smooth_win=10):
+
+    if freq_cutoffs is None:
+        # then don't do bandpass_filtfilt
+        filtsong = rawsong
+    else:
+        filtsong = bandpass_filtfilt(rawsong, samp_freq, freq_cutoffs)
+        #filtsong = rawsong
+
+    filtsong=filtsong.astype(np.float)
+	
+    squared_song = np.power(filtsong, 2)
+
+    len = np.round(samp_freq * smooth_win / 1000).astype(int)
+    h = np.ones((len,)) / len
+    #np.savetxt('h_20kHz.txt', h, fmt='%1.6f', delimiter='/n')
+	#np.convolve uses (M,) like arrays
+    smooth = np.convolve(squared_song, h)
+    offset = round((smooth.shape[-1] - filtsong.shape[-1]) / 2)
+    smooth = smooth[offset:filtsong.shape[-1] + offset]
+    return smooth
+
 
 #Fast loop to check visually if the syllables are ok. I've been finding problems in A syllables, so I recommend checking always before analysis.
 def checksyls(songfile,motifile, beg, end):
@@ -534,16 +560,16 @@ def jumpsyl(spikefile):
 def read(file):
     reader = neo.io.Spike2IO(filename=file) #This command will read the file defined above
     #reader = neo.io.RawBinarySignalIO(filename=file)
-	
     data = reader.read()[0] #This will get the block of data of interest inside the file
     data_seg=data.segments[0] #This will get all the segments
-	
     #an_sig=data_seg.analogsignals
     #print((data_seg.analogsignals[0].as_array()).shape)
     #print(data_seg.unit_channels[0])
 
     return data, data_seg
 
+
+	
 ## 
 #
 # This  function will allow you to get information inside the .smr file.
@@ -839,7 +865,9 @@ def createsave_tetr(file):
     os.chdir("..")
     print("\n"+"All files were created!")
 		
-	
+
+
+		
 ## 
 #
 # Plots the spike shapes during baseline and during motifs. Raw and average spike shapes from filtered and unfiltered LFP
@@ -3086,7 +3114,7 @@ def psth_glob_interpol(spikefile, motifile, basebeg, basend,binwidth=binwidth, f
 # basebeg is the start time for baseline computation
 #
 # basend is the end time for baseline computation    
-def psth_glob(spikefile, motifile, basebeg, basend,binwidth=binwidth, fs=fs):      
+def psth_glob(spikefile, motifile, syllable_list,basebeg, basend,binwidth=binwidth, fs=fs):      
     #sybs=["A","B","C","D"]
     #index of the noisy syllable (the syllable that received the noise on top of itself), by convention it comes after all relevant 
 	#syllables (e.g. if motif is a,b,c,d and the syll c receives noise, the labels will be a,b,c,d,e with e being noisy c)
@@ -3095,6 +3123,8 @@ def psth_glob(spikefile, motifile, basebeg, basend,binwidth=binwidth, fs=fs):
     #idx_noisy_syb = 2 #idex in sybs of the relevant syb that probabilistically receives noise and that is labelled using the last label in syb. if sybs=["a","b","c","d"] and the syllable receiving noise is c (and d is thus the noisy version of c), then idx_noisy_syb = 2
     #len_motif=len(sybs)-1 #length of the motif (nb syllables)
     #nb_syls=len(sybs) #number of syllables, the noisy syllable is considered as an additional syllable
+	
+    read_syllable_list(syllable_list)
 	
     finallist=sortsyls_psth_glob(motifile,0)
     clean_motifs=np.array(finallist[0])
@@ -3245,8 +3275,11 @@ def psth_glob(spikefile, motifile, basebeg, basend,binwidth=binwidth, fs=fs):
     #py.fig.text(0.39, 0.97, "Syllable B", va="center", ha="left",fontsize=18)
     #py.fig.text(0.72, 0.97, "Syllable C", va="center", ha="left",fontsize=18)
 
+    #print(x_ticks[-1])
     for i in range(len_motif):
-        py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)      
+        #print((x_ticks[2*i+1]+x_ticks[2*i])/2)
+        #py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)      
+        py.fig.text((x_ticks[2*i+1]+x_ticks[2*i])/(2*x_ticks[-1]), 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)      
 
     ax[shapes2].tick_params(
             axis="x",          # changes apply to the x-axis
@@ -8255,8 +8288,8 @@ def corrpitch_auto(songfile, motifile, spikefile,lags, window_size=window_size,f
     song=np.load(songfile)
     finallist=sortsyls(motifile,0) 	
     fichier = open("SummaryCorrPitch.txt", "w+")
-    y=["Mean_p_A.txt","Mean_p_B.txt","Mean_p_C.txt","Mean_p_D.txt","Mean_p_E.txt","Mean_p_G.txt"]
-    Syls=["a","b","c","d","e","g"]
+    y=["Mean_p_A.txt","Mean_p_B.txt","Mean_p_C.txt","Mean_p_D.txt"]
+    Syls=["a","b","c","d"]
     check=jumpsyl(spikefile)
     for obj in range(len(finallist)):
         if Syls[obj] in check:
@@ -8804,8 +8837,8 @@ def corramplitude_auto(songfile, motifile, spikefile, fs=fs, window_size=window_
     song=np.load(songfile)
     finallist=sortsyls(motifile,0)  
     f = open("SummaryCorrAmp.txt", "w+")
-    y=["MeanA.txt","MeanB.txt","MeanC.txt","MeanD.txt","MeanE.txt","MeanG.txt"]
-    Syls=["a","b","c","d","e","g"]
+    y=["MeanA.txt","MeanB.txt","MeanC.txt","MeanD.txt"]
+    Syls=["a","b","c","d"]
     check=jumpsyl(spikefile)
     for g in range(len(finallist)):
         if Syls[g] in check:
@@ -9344,8 +9377,8 @@ def corrspectral_auto(songfile, motifile, spikefile, fs=fs, window_size=window_s
     song=np.load(songfile)
     finallist=sortsyls(motifile,0)  
     f = open("SummaryCorrSpecEnt.txt", "w+")
-    y=["MeanA.txt","MeanB.txt","MeanC.txt","MeanD.txt","MeanE.txt","MeanG.txt"]
-    Syls=["a","b","c","d","e","g"]
+    y=["MeanA.txt","MeanB.txt","MeanC.txt","MeanD.txt"]
+    Syls=["a","b","c","d"]
     check=jumpsyl(spikefile)  
     for g in range(len(finallist)):
         if Syls[g] in check:
