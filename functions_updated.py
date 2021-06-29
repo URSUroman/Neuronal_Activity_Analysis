@@ -3560,7 +3560,7 @@ def psth_glob(spikefile, motifile, syllable_list,basebeg, basend,binwidth=binwid
 # basebeg is the start time for baseline computation
 #
 # basend is the end time for baseline computation    
-def psth_glob_long_noise(spikefile, motifile, basebeg, basend,binwidth=binwidth, fs=fs):      
+def psth_glob_long_noise(spikefile, motifile, syllable_list,basebeg, basend,binwidth=binwidth, fs=fs):      
     #sybs=["A","B","C","D"]
     #index of the noisy syllable (the syllable that received the noise on top of itself), by convention it comes after all relevant 
 	#syllables (e.g. if motif is a,b,c,d and the syll c receives noise, the labels will be a,b,c,d,e with e being noisy c)
@@ -3569,6 +3569,8 @@ def psth_glob_long_noise(spikefile, motifile, basebeg, basend,binwidth=binwidth,
     #idx_noisy_syb = 2 #idex in syb of the relevant syb that probabilistically receives noise and that is labelled using the last label in syb. if sybs=["a","b","c","d"] and the syllable receiving noise is c (and d is thus the noisy version of c), then idx_noisy_syb = 2
     #len_motif=len(sybs)-1 #length of the motif (nb syllables)
     #nb_syls=len(sybs) #number of syllables, the noisy syllable is considered as an additional syllable
+	
+    read_syllable_list(syllable_list)
 	
     finallist=sortsyls_psth_glob(motifile,0)
     clean_motifs=np.array(finallist[0])
@@ -4025,7 +4027,7 @@ def psth_glob_long_noise(spikefile, motifile, basebeg, basend,binwidth=binwidth,
 # basebeg is the start time for baseline computation
 #
 # basend is the end time for baseline computation    
-def psth_glob_long_noise_mixed(spikefile, motifile, basebeg, basend,binwidth=binwidth, fs=fs):      
+def psth_glob_long_noise_mixed(spikefile, motifile, syllable_list,basebeg, basend,binwidth=binwidth, fs=fs):      
     #sybs=["A","B","C","D"]
     #index of the noisy syllable (the syllable that received the noise on top of itself), by convention it comes after all relevant 
 	#syllables (e.g. if motif is a,b,c,d and the syll c receives noise, the labels will be a,b,c,d,e with e being noisy c)
@@ -4034,6 +4036,8 @@ def psth_glob_long_noise_mixed(spikefile, motifile, basebeg, basend,binwidth=bin
     #idx_noisy_syb = 2 #idex in syb of the relevant syb that probabilistically receives noise and that is labelled using the last label in syb. if sybs=["a","b","c","d"] and the syllable receiving noise is c (and d is thus the noisy version of c), then idx_noisy_syb = 2
     #len_motif=len(sybs)-1 #length of the motif (nb syllables)
     #nb_syls=len(sybs) #number of syllables, the noisy syllable is considered as an additional syllable
+	
+    read_syllable_list(syllable_list)
 	
     finallist=sortsyls_psth_glob(motifile,0)
     clean_motifs=np.array(finallist[0])
@@ -4478,7 +4482,7 @@ def psth_glob_long_noise_mixed(spikefile, motifile, basebeg, basend,binwidth=bin
 # basebeg is the start time for baseline computation
 #
 # basend is the end time for baseline computation    
-def psth_glob_mixed(spikefile, motifile, basebeg, basend,binwidth=binwidth, fs=fs):      
+def psth_glob_mixed(spikefile, motifile, syllable_list, basebeg, basend,binwidth=binwidth, fs=fs):      
     #sybs=["A","B","C","D"]
     #index of the noisy syllable (the syllable that received the noise on top of itself), by convention it comes after all relevant 
 	#syllables (e.g. if motif is a,b,c,d and the syll c receives noise, the labels will be a,b,c,d,e with e being noisy c)
@@ -4487,6 +4491,8 @@ def psth_glob_mixed(spikefile, motifile, basebeg, basend,binwidth=binwidth, fs=f
     #idx_noisy_syb = 2 #idex in syb of the relevant syb that probabilistically receives noise and that is labelled using the last label in syb. if sybs=["a","b","c","d"] and the syllable receiving noise is c (and d is thus the noisy version of c), then idx_noisy_syb = 2
     #len_motif=len(sybs)-1 #length of the motif (nb syllables)
     #nb_syls=len(sybs) #number of syllables, the noisy syllable is considered as an additional syllable
+	
+    read_syllable_list(syllable_list)
 	
     finallist=sortsyls_psth_glob(motifile,0)
     clean_motifs=np.array(finallist[0])
@@ -5527,7 +5533,7 @@ def psth_glob_sep_interpol(spikefile, motifile, basebeg, basend,binwidth=binwidt
 # basebeg is the start time for baseline computation
 #
 # basend is the end time for baseline computation    
-def psth_glob_sep(spikefile, motifile, basebeg, basend,binwidth=binwidth, fs=fs):      
+def psth_glob_sep(spikefile, motifile, syllable_list, basebeg, basend,binwidth=binwidth, fs=fs):      
     #sybs=["A","B","C","D"]
     #index of the noisy syllable (the syllable that received the noise on top of itself), by convention it comes after all relevant 
 	#syllables (e.g. if motif is a,b,c,d and the syll c receives noise, the labels will be a,b,c,d,e with e being noisy c)
@@ -5536,6 +5542,8 @@ def psth_glob_sep(spikefile, motifile, basebeg, basend,binwidth=binwidth, fs=fs)
     #idx_noisy_syb = 2 #idex in syb of the relevant syb that probabilistically receives noise and that is labelled using the last label in syb. if sybs=["a","b","c","d"] and the syllable receiving noise is c (and d is thus the noisy version of c), then idx_noisy_syb = 2
     #len_motif=len(sybs)-1 #length of the motif (nb syllables)
     #nb_syls=len(sybs) #number of syllables, the noisy syllable is considered as an additional syllable
+	
+    read_syllable_list(syllable_list)
 	
     finallist=sortsyls_psth_glob(motifile,0)
     clean_motifs=np.array(finallist[0])
@@ -6124,7 +6132,7 @@ def psth_glob_sep(spikefile, motifile, basebeg, basend,binwidth=binwidth, fs=fs)
 # basebeg is the start time for baseline computation
 #
 # basend is the end time for baseline computation    
-def psth_glob_sep_long_noise(spikefile, motifile, basebeg, basend,binwidth=binwidth, fs=fs):      
+def psth_glob_sep_long_noise(spikefile, motifile, syllable_list, basebeg, basend,binwidth=binwidth, fs=fs):      
     #sybs=["A","B","C","D"]
     #index of the noisy syllable (the syllable that received the noise on top of itself), by convention it comes after all relevant 
 	#syllables (e.g. if motif is a,b,c,d and the syll c receives noise, the labels will be a,b,c,d,e with e being noisy c)
@@ -6133,6 +6141,8 @@ def psth_glob_sep_long_noise(spikefile, motifile, basebeg, basend,binwidth=binwi
     #idx_noisy_syb = 2 #idex in syb of the relevant syb that probabilistically receives noise and that is labelled using the last label in syb. if sybs=["a","b","c","d"] and the syllable receiving noise is c (and d is thus the noisy version of c), then idx_noisy_syb = 2
     #len_motif=len(sybs)-1 #length of the motif (nb syllables)
     #nb_syls=len(sybs) #number of syllables, the noisy syllable is considered as an additional syllable
+	
+    read_syllable_list(syllable_list)
 	
     finallist=sortsyls_psth_glob(motifile,0)
     clean_motifs=np.array(finallist[0])
@@ -6716,13 +6726,16 @@ def psth_glob_sep_long_noise(spikefile, motifile, basebeg, basend,binwidth=binwi
 # basend is the end time for baseline computation  
 #
 #  returns the psth
-def psth_glob_sep_no_noise(spikefile, motifile, basebeg, basend,binwidth=binwidth, fs=fs):      
+def psth_glob_sep_no_noise(spikefile, motifile, syllable_list, basebeg, basend,binwidth=binwidth, fs=fs):      
     #sybs=["A","B","C"]
     #index of the noisy syllable (the syllable that received the noise on top of itself), by convention it comes after all relevant 
 	#syllables (e.g. if motif is a,b,c,d and the syll c receives noise, the labels will be a,b,c,d,e with e being noisy c)
 	#idx to be set by the user. It is never 0. index of the clean syllable (the one that receives probabilistic noise). Later try to ask for both indeces in the console
 
     #len_motif=len(sybs) #length of the motif (nb syllables)
+	
+    read_syllable_list(syllable_list)
+	
 
     finallist=sortsyls_psth_glob(motifile,0)
     clean_motifs=np.array(finallist[0])
