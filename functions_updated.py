@@ -3114,7 +3114,7 @@ def psth_glob_interpol(spikefile, motifile, basebeg, basend,binwidth=binwidth, f
 # basebeg is the start time for baseline computation
 #
 # basend is the end time for baseline computation    
-def psth_glob(spikefile, motifile, syllable_list,basebeg, basend,binwidth=binwidth, fs=fs):      
+def psth_glob_old(spikefile, motifile, syllable_list,basebeg, basend,binwidth=binwidth, fs=fs):      
     #sybs=["A","B","C","D"]
     #index of the noisy syllable (the syllable that received the noise on top of itself), by convention it comes after all relevant 
 	#syllables (e.g. if motif is a,b,c,d and the syll c receives noise, the labels will be a,b,c,d,e with e being noisy c)
@@ -3544,29 +3544,14 @@ def psth_glob(spikefile, motifile, syllable_list,basebeg, basend,binwidth=binwid
     py.fig.text(0.5, 0.02, "Time(seconds)", va="center", ha="center",fontsize=18)
     f.close()
 
-	
-## 
-#
-# Based on psth_glob but for the case the white noise lasts more than the syllable. Should never happen after 30.09.2020 because the psth is then not correct
-#
-# Arguments:    
-#
-# spikefile is the .txt file with the spiketimes.
-#
-# motifile is the .txt file containing the annotations of the beggining and end of each syllable/motif.
-#
-# fs is the sampling frequency
-#
-# basebeg is the start time for baseline computation
-#
-# basend is the end time for baseline computation    
-def psth_glob_long_noise(spikefile, motifile, syllable_list,basebeg, basend,binwidth=binwidth, fs=fs):      
+
+def psth_glob(spikefile, motifile, syllable_list,basebeg, basend,binwidth=binwidth, fs=fs):      
     #sybs=["A","B","C","D"]
     #index of the noisy syllable (the syllable that received the noise on top of itself), by convention it comes after all relevant 
 	#syllables (e.g. if motif is a,b,c,d and the syll c receives noise, the labels will be a,b,c,d,e with e being noisy c)
 	#idx to be set by the user. It is never 0. index of the clean syllable (the one that receives probabilistic noise). Later try to ask for both indeces in the console
 
-    #idx_noisy_syb = 2 #idex in syb of the relevant syb that probabilistically receives noise and that is labelled using the last label in syb. if sybs=["a","b","c","d"] and the syllable receiving noise is c (and d is thus the noisy version of c), then idx_noisy_syb = 2
+    #idx_noisy_syb = 2 #idex in sybs of the relevant syb that probabilistically receives noise and that is labelled using the last label in syb. if sybs=["a","b","c","d"] and the syllable receiving noise is c (and d is thus the noisy version of c), then idx_noisy_syb = 2
     #len_motif=len(sybs)-1 #length of the motif (nb syllables)
     #nb_syls=len(sybs) #number of syllables, the noisy syllable is considered as an additional syllable
 	
@@ -3575,7 +3560,6 @@ def psth_glob_long_noise(spikefile, motifile, syllable_list,basebeg, basend,binw
     finallist=sortsyls_psth_glob(motifile,0)
     clean_motifs=np.array(finallist[0])
     noisy_motifs=np.array(finallist[1])
-	
     all_motifs=np.concatenate((np.array(finallist[1]),np.array(finallist[0])),axis=0)
 
     #Starts to plot the PSTH
@@ -3642,16 +3626,12 @@ def psth_glob_long_noise(spikefile, motifile, syllable_list,basebeg, basend,binw
 
            meandurall=np.mean(used_off[:]-used_on[:])
            n_noisy=len(used_off[:])
-           #meandurall_list[i]=((n_clean/(n_clean+n_noisy))*meandurall_list[i]+(n_noisy/(n_clean+n_noisy))*meandurall) #mean of the noisy and clean renditions of he syllable. Makes more sense to do DTW in the same way for noisy and clean syllables 
+           meandurall_list[i]=((n_clean/(n_clean+n_noisy))*meandurall_list[i]+(n_noisy/(n_clean+n_noisy))*meandurall) #mean of the noisy and clean renditions of he syllable. Makes more sense to do DTW in the same way for noisy and clean syllables 
            normfactor[-1]=len(used_off[:])
 		   
     mean_nb_rendit_syl=normfactor_mean #before *binwidth, normfactor_mean is the number of motif renditions
     normfactor_mean=normfactor_mean*binwidth
     normfactor=normfactor*binwidth
-
-    #correct the noisy syllable: change length to average length of clean renditions
-    noisy_motifs[:,2*idx_noisy_syb+1]=noisy_motifs[:,2*idx_noisy_syb]+meandurall_list[2*idx_noisy_syb]*fs
-    all_motifs=np.concatenate((noisy_motifs,clean_motifs),axis=0)
 	
     #print(meandurall_list)
 
@@ -3666,31 +3646,13 @@ def psth_glob_long_noise(spikefile, motifile, syllable_list,basebeg, basend,binw
     ax[shapes].set_xlim(min(bins), max(bins))
     ax[shapes2].set_xlim(min(bins), max(bins))
     x_ticks=[]
-	
-	
-	##############################################################
-    ##x_ticks.append(min(bins))
-    #x_ax_len=shoulder_beg
-    #for i in range(2*len_motif-1): #last element of meandurall_lis is the duration of the noisy version of the syllable receiving contingent noise
-    #    x_ticks.append(x_ax_len)
-    #    x_ax_len=x_ax_len+meandurall_list[i]
-    #x_ticks.append(x_ax_len)
-    #x_ticks.append(x_ax_len+shoulder_end)
-	###############################################################
-	######################################################
-	#X ticks: only onset of syllables
-	######################################################
+    #x_ticks.append(min(bins))
     x_ax_len=shoulder_beg
-    for i in range(len_motif): #last element of meandurall_lis is the duration of the noisy version of the syllable receiving contingent noise
+    for i in range(2*len_motif-1): #last element of meandurall_lis is the duration of the noisy version of the syllable receiving contingent noise
         x_ticks.append(x_ax_len)
-        if(i!=(len_motif-1)):
-            x_ax_len=x_ax_len+meandurall_list[2*i]+meandurall_list[2*i+1]
-        else:
-            x_ax_len=x_ax_len+meandurall_list[2*i]
+        x_ax_len=x_ax_len+meandurall_list[i]
     x_ticks.append(x_ax_len)
     x_ticks.append(x_ax_len+shoulder_end)
-	######################################################	
-		
 		
     x_ticks=np.asarray(x_ticks)
     #ax[shapes].set_xticks([min(bins),0,meandurall_list[i],max(bins)])
@@ -3745,7 +3707,8 @@ def psth_glob_long_noise(spikefile, motifile, syllable_list,basebeg, basend,binw
     #py.fig.text(0.72, 0.97, "Syllable C", va="center", ha="left",fontsize=18)
 
     for i in range(len_motif):
-        py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)      
+        #py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18) 
+        py.fig.text((x_ticks[2*i+1]+x_ticks[2*i])/(2*x_ticks[-1]), 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)  		
 
     ax[shapes2].tick_params(
             axis="x",          # changes apply to the x-axis
@@ -3762,6 +3725,507 @@ def psth_glob_long_noise(spikefile, motifile, syllable_list,basebeg, basend,binw
     weights_cln=np.array([],dtype=float)
     weights_noisy=np.array([],dtype=float)
 	#treat all syllables and gaps
+    for i in range(-1,2*len_motif):
+	    #treat the spikes in the shoulder window before motif onset
+        if(i==-1):
+           used_off=all_motifs[:,0] #sets the onsets of firstt sylable in motif
+           used_off=used_off/fs
+           used_on=all_motifs[:,0] 
+           used_on=(used_on/fs)-shoulder_beg #considers the time delay due to shoulder beg
+           spikes1=[]
+           res=-1
+           spikes=[]
+           n0=0
+           for j in range(len(used_on)):
+               step1=[]
+               step2=[]
+               step3=[]
+               beg= used_on[j] #Will compute the beginning of the window
+               end= used_off[j] #Will compute the end of the window
+               step1=spused[np.where(np.logical_and(spused >= beg, spused <= end) == True)]-beg
+               spikes1+=[step1]
+               res=res+1 #motif numer shift on y axis on raster plot
+               #spikes2=spikes1
+               spikes3=np.array(spikes1[n0]) # Gets the step1 array for scatter
+		   	   #Shift the spike times for each syllable type for the scatter plot 
+               ax[shapes].scatter(shift_syl_plot+spikes3,res+np.zeros(len(spikes3)),marker="|", color="black")
+               spikes2_cln=np.concatenate((spikes2_cln,shift_syl_plot+spikes3),axis=0)
+               spikes2_noisy=np.concatenate((spikes2_noisy,shift_syl_plot+spikes3),axis=0)
+               n0+=1   
+           #bins=np.arange(0,shoulder_beg, step=binwidth)	  
+           bins_edge=bins_edge+shoulder_beg		
+           shift_syl_plot=shift_syl_plot+shoulder_beg
+           ax[shapes].axvline(x=shift_syl_plot, color="grey", linestyle="--")
+           ax[shapes2].axvline(x=shift_syl_plot, color="grey", linestyle="--")
+           weights_cln=np.append(weights_cln,np.ones(len(np.concatenate(spikes1)))/normfactor[0])
+           weights_noisy=np.append(weights_noisy,np.ones(len(np.concatenate(spikes1)))/normfactor[0])	   
+
+	    #treat the spikes in the shoulder window after motif offset
+        elif(i==2*len_motif-1):
+           used_on=all_motifs[:,i] # sets the onsets of firstt sylable in motif
+           used_on=used_on/fs
+           used_off=all_motifs[:,i]
+           used_off=(used_off/fs)+shoulder_end # considers the time delay due to shoulder end
+           spikes1=[]
+           res=-1
+           spikes=[]
+           n0=0
+           for j in range(len(used_on)):
+               step1=[]
+               step2=[]
+               step3=[]
+               beg= used_on[j] #Will compute the beginning of the window
+               end= used_off[j] #Will compute the end of the window
+               if(beg>0): #last syllable sung
+                  step1=spused[np.where(np.logical_and(spused >= beg, spused <= end) == True)]-beg
+                  spikes1+=[step1]
+                  res=res+1 #motif numer shift on y axis on raster plot
+                  #spikes2=spikes1
+                  spikes3=np.array(spikes1[n0]) # Gets the step1 array for scatter
+		   	      #Shift the spike times for each syllable type for the scatter plot 
+                  ax[shapes].scatter(shift_syl_plot+spikes3,res+np.zeros(len(spikes3)),marker="|", color="black")
+                  spikes2_cln=np.concatenate((spikes2_cln,shift_syl_plot+spikes3),axis=0)
+                  spikes2_noisy=np.concatenate((spikes2_noisy,shift_syl_plot+spikes3),axis=0)
+                  n0+=1
+               else: #last syllable not sung
+                  res=res+1
+           bins_edge=bins_edge+shoulder_end	
+           shift_syl_plot=shift_syl_plot+shoulder_end
+           #ax[shapes].axvline(x=shift_syl_plot, color="grey", linestyle="--")
+           #ax[shapes2].axvline(x=shift_syl_plot, color="grey", linestyle="--")	
+           if(idx_noisy_syb==len_motif-1):#last syl is the one that is targeted wih noise
+              weights_cln=np.append(weights_cln,np.ones(len(np.concatenate(spikes1)))/(normfactor[-1]+normfactor[-2]))	
+              weights_noisy=np.append(weights_noisy,np.ones(len(np.concatenate(spikes1)))/(normfactor[-1]+normfactor[-2]))
+           else:
+              weights_cln=np.append(weights_cln,np.ones(len(np.concatenate(spikes1)))/normfactor[-2])
+              weights_noisy=np.append(weights_noisy,np.ones(len(np.concatenate(spikes1)))/normfactor[-2])   
+
+        elif(i!=2*idx_noisy_syb):
+           used_on=all_motifs[:,i] # sets the onsets of which syllable to use
+           #used_on=used_on[(np.where((used_on >0) == True))] #clean from case where the syllable is not sung
+           used_on=used_on/fs
+           used_off=all_motifs[:,i+1] # sets the offsets of which syllable to use
+           #used_off=used_off[(np.where((used_off >0) == True))] #clean from case where the syllable is not sung
+           used_off=used_off/fs
+           spikes1=[]
+           res=-1
+           spikes=[]
+           n0=0
+           for j in range(len(used_on)):
+               step1=[]
+               step2=[]
+               step3=[]
+               beg= used_on[j] #Will compute the beginning of the window
+               end= used_off[j] #Will compute the end of the window
+               if(beg>0 and end>0):#syllable sung
+                  step1=spused[np.where(np.logical_and(spused >= beg, spused <= end) == True)]-beg
+                  step2=step1*(meandurall_list[i]/(end-beg))
+                  spikes1+=[step2]
+                  res=res+1
+                  #print(step2)
+                  spikes3=np.array(spikes1[n0]) # Gets the step2 and step3 arrays for scatter
+		   	      #Shift the spike times for each syllable type for the scatter plot 
+                  ax[shapes].scatter(shift_syl_plot+spikes3,res+np.zeros(len(spikes3)),marker="|", color="black")
+                  spikes2_cln=np.concatenate((spikes2_cln,shift_syl_plot+spikes3),axis=0)
+                  spikes2_noisy=np.concatenate((spikes2_noisy,shift_syl_plot+spikes3),axis=0)
+                  n0+=1		   
+               else:#syllable not sung
+                  res=res+1  
+           bins_edge=bins_edge+meandurall_list[i]		
+           shift_syl_plot=shift_syl_plot+meandurall_list[i]
+           ax[shapes].axvline(x=shift_syl_plot, color="grey", linestyle="--")
+           ax[shapes2].axvline(x=shift_syl_plot, color="grey", linestyle="--")	
+           weights_cln=np.append(weights_cln,np.ones(len(np.concatenate(spikes1)))/normfactor[i])	
+           weights_noisy=np.append(weights_noisy,np.ones(len(np.concatenate(spikes1)))/normfactor[i])	
+        
+		#treat the spikes within the syllable, for the syllable that is targeted with noise	   
+        else:	
+           #noisy renditions	    
+           used_on=noisy_motifs[:,i] # sets the onsets of which syllable to use
+           #used_on=used_on[(np.where((used_on >0) == True))] #clean from case where the syllable is not sung
+           used_on=used_on/fs
+           used_off=noisy_motifs[:,i+1] # sets the offsets of which syllable to use
+           #used_off=used_off[(np.where((used_off >0) == True))] #clean from case where the syllable is not sung
+           used_off=used_off/fs
+           spikes1=[]
+           res=-1
+           n0=0
+           for j in range(len(used_on)):
+               step1=[]
+               step2=[]
+               step3=[]
+               beg= used_on[j] #Will compute the beginning of the window
+               end= used_off[j] #Will compute the end of the window
+               if(beg>0 and end>0):#syllable sung
+                  step1=spused[np.where(np.logical_and(spused >= beg, spused <= end) == True)]-beg
+                  step2=step1*(meandurall_list[i]/(end-beg))
+                  spikes1+=[step2]
+                  res=res+1
+                  #spikes2_noisy=spikes1
+                  spikes3_noisy=np.array(spikes1[n0]) # Gets the step2 and step3 arrays for scatter
+		   	      #Shift the spike times for each syllable type for the scatter plot 
+                  ax[shapes].scatter(shift_syl_plot+spikes3_noisy,res+np.zeros(len(spikes3_noisy)),marker="|", color="blue")
+                  spikes2_noisy=np.concatenate((spikes2_noisy,shift_syl_plot+spikes3_noisy),axis=0)
+                  n0+=1
+               else:#syllable not sung
+                  res=res+1 
+           #bins_edge=bins_edge+meandurall_list[i]		
+           #shift_syl_plot=shift_syl_plot+meandurall_list[i]
+           #ax[shapes].axvline(x=shift_syl_plot, color="grey", linestyle="--")
+           #ax[shapes2].axvline(x=shift_syl_plot, color="grey", linestyle="--")	
+           weights_noisy=np.append(weights_noisy,np.ones(len(np.concatenate(spikes1)))/normfactor[-1])
+				  
+           #clean renditions	  
+           used_on=clean_motifs[:,i] # sets the onsets of which syllable to use
+           #used_on=used_on[(np.where((used_on >0) == True))] #clean from case where the syllable is not sung
+           used_on=used_on/fs
+           used_off=clean_motifs[:,i+1] # sets the offsets of which syllable to use
+           #used_off=used_off[(np.where((used_off >0) == True))] #clean from case where the syllable is not sung
+           used_off=used_off/fs
+           spikes1=[]
+           #res=-1 continue with previous value of res
+           spikes_cln=[]
+           n0=0
+           for j in range(len(used_on)):
+               step1=[]
+               step2=[]
+               step3=[]
+               beg= used_on[j] #Will compute the beginning of the window
+               end= used_off[j] #Will compute the end of the window
+               if(beg>0 and end>0):#syllable sung
+                  step1=spused[np.where(np.logical_and(spused >= beg, spused <= end) == True)]-beg
+                  step2=step1*(meandurall_list[i]/(end-beg))
+                  spikes1+=[step2]
+                  res=res+1
+                  #spikes2_cln=spikes1
+                  spikes3_cln=np.array(spikes1[n0]) # Gets the step2 and step3 arrays for scatter
+		   	      #Shift the spike times for each syllable type for the scatter plot 
+                  ax[shapes].scatter(shift_syl_plot+spikes3_cln,res+np.zeros(len(spikes3_cln)),marker="|", color="black")
+                  spikes2_cln=np.concatenate((spikes2_cln,shift_syl_plot+spikes3_cln),axis=0)
+                  n0+=1 
+               else:#syllable not sung
+                  res=res+1
+           bins_edge=bins_edge+meandurall_list[i]		
+           shift_syl_plot=shift_syl_plot+meandurall_list[i]
+           ax[shapes].axvline(x=shift_syl_plot, color="grey", linestyle="--")
+           ax[shapes2].axvline(x=shift_syl_plot, color="grey", linestyle="--")	
+           weights_cln=np.append(weights_cln,np.ones(len(np.concatenate(spikes1)))/normfactor[i])	
+
+    #########################
+    # Computation of spikes
+	#########################
+    bins=np.arange(0,bins_edge, step=binwidth)
+    #spikes=np.sort(np.concatenate(spikes2))
+    spikes_cln=np.sort(spikes2_cln)
+    spikes_noisy=np.sort(spikes2_noisy)
+    y_cln,x1= py.histogram(spikes_cln, bins=bins, weights=weights_cln)#np.ones(len(spikes))/normfactor[0])
+    y_noisy,x1= py.histogram(spikes_noisy, bins=bins, weights=weights_noisy)#np.ones(len(spikes))/normfactor[0])
+	
+	#set new x axis by shifting the bin edges by binwidth/2
+    x2=np.delete(x1,-1)
+    x2=x2+binwidth/2
+    ax[shapes2].plot(x2,y_noisy, color="blue")
+    ax[shapes2].plot(x2,y_cln, color="red")	
+    py.fig.subplots_adjust(hspace=0)	
+
+    #ax[shapes2].plot(xnew,ynew, color="blue")
+    py.fig.subplots_adjust(hspace=0)
+    black_line = mlines.Line2D([], [], color="black", label="+95%")
+    black_dashed  = mlines.Line2D([], [], color="black", label="-95%", linestyle="--")
+    green_line  = mlines.Line2D([], [], color="green", label="Mean")
+    ax[shapes2].legend(handles=[black_line,black_dashed,green_line], loc="upper left", prop={'size': 12})
+    ax[shapes].xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+	#leg = ax[0].legend(loc="upper left", bbox_to_anchor=[0, 1], fancybox=True)
+		
+    if (len_motif == 1):
+        ax[0].set_ylabel("Spikes/Sec",fontsize=18)
+        ax[1].set_ylabel("Motif number",fontsize=18)
+    else:
+        ax[0].set_ylabel("Spikes/Sec",fontsize=18)
+        ax[1].set_ylabel("Motif number",fontsize=18)
+        values = np.array([])
+        values2 = np.array([])
+        top = np.array([])
+        top2 = np.array([])
+        values = np.array(ax[0].get_ylim())
+        values2 = np.array(ax[1].get_ylim())
+        top = np.sort(np.append(top, values))
+        top2 = np.sort(np.append(top2, values2))
+        ax[0].set_ylim(0,max(top))
+        ax[1].set_ylim(min(top2),max(top2))  
+        #for lim in range(len_motif):
+        #    values = np.array(ax[0,lim].get_ylim())
+        #    values2 = np.array(ax[1,lim].get_ylim())
+        #    top = np.sort(np.append(top, values))
+        #    top2 = np.sort(np.append(top2, values2))
+        #for limreal in range(len(finallist)):
+        #    ax[0,limreal].set_ylim(0,max(top))
+        #    ax[1,limreal].set_ylim(min(top2),max(top2))   		
+
+    wind=py.get_current_fig_manager()
+    wind.window.showMaximized()
+    #py.fig.subplots_adjust(top=0.957, bottom=0.072, left=0.032, right=0.984, hspace=0.0, wspace=0.109)
+    py.fig.subplots_adjust(top=0.957, bottom=0.072, left=0.042, right=0.984, hspace=0.0, wspace=0.109)
+    #py.fig.tight_layout()
+    py.fig.text(0.5, 0.02, "Time(seconds)", va="center", ha="center",fontsize=18)
+    f.close()
+
+
+	
+## 
+#
+# Based on psth_glob but for the case the white noise lasts more than the syllable. Should never happen after 30.09.2020 because the psth is then not correct
+#
+# Arguments:    
+#
+# spikefile is the .txt file with the spiketimes.
+#
+# motifile is the .txt file containing the annotations of the beggining and end of each syllable/motif.
+#
+# fs is the sampling frequency
+#
+# basebeg is the start time for baseline computation
+#
+# basend is the end time for baseline computation    
+def psth_glob_long_noise(spikefile, motifile, syllable_list,basebeg, basend,binwidth=binwidth, fs=fs):      
+    #sybs=["A","B","C","D"]
+    #index of the noisy syllable (the syllable that received the noise on top of itself), by convention it comes after all relevant 
+	#syllables (e.g. if motif is a,b,c,d and the syll c receives noise, the labels will be a,b,c,d,e with e being noisy c)
+	#idx to be set by the user. It is never 0. index of the clean syllable (the one that receives probabilistic noise). Later try to ask for both indeces in the console
+
+    #idx_noisy_syb = 2 #idex in syb of the relevant syb that probabilistically receives noise and that is labelled using the last label in syb. if sybs=["a","b","c","d"] and the syllable receiving noise is c (and d is thus the noisy version of c), then idx_noisy_syb = 2
+    #len_motif=len(sybs)-1 #length of the motif (nb syllables)
+    #nb_syls=len(sybs) #number of syllables, the noisy syllable is considered as an additional syllable
+		
+    read_syllable_list(syllable_list)
+		
+    finallist=sortsyls_psth_glob(motifile,0)
+    clean_motifs=np.array(finallist[0])
+    noisy_motifs=np.array(finallist[1])
+	
+    shpe_c=clean_motifs.shape
+    if(2*idx_noisy_syb<(2*len_motif-1-1)): #noisy syllable is somewhere in the middle of the motif
+      nb_segments=shpe_c[1]-1
+    else:
+      nb_segments=shpe_c[1]
+	  
+    clean_motifs_=np.zeros((shpe_c[0],nb_segments))
+    shpe_n=noisy_motifs.shape
+    noisy_motifs_=np.zeros((shpe_n[0],nb_segments))
+
+	#In case the noisy syllable is inside the motif do DTW on segment: onset of syll; onset of next syll
+    p=0
+    for i in range(nb_segments):
+        if(i==2*idx_noisy_syb):
+          if(i<2*len_motif-1-1): #noisy syllable is somewhere in the middle of the motif
+            clean_motifs_[:,i]=clean_motifs[:,p]
+            noisy_motifs_[:,i]=noisy_motifs[:,p]
+            p=p+1
+          else:
+            clean_motifs_[:,i]=clean_motifs[:,p]
+            noisy_motifs_[:,i]=noisy_motifs[:,p]
+        else:
+          clean_motifs_[:,i]=clean_motifs[:,p]
+          noisy_motifs_[:,i]=noisy_motifs[:,p]
+        p=p+1
+		   
+    clean_motifs=clean_motifs_
+    noisy_motifs=noisy_motifs_
+    #print(clean_motifs_.shape)
+
+    if(2*idx_noisy_syb==(2*len_motif-1-1)): #noisy syllable is the last syllable in the motif
+      mean_off_clean=np.mean(clean_motifs[:,-1])
+      mean_off_noisy=np.mean(noisy_motifs[:,-1])
+      noisy_motifs[:,-1]=noisy_motifs[:,-1]-(mean_off_noisy-mean_off_clean)
+	
+
+    #all_motifs=np.concatenate((np.array(finallist[1]),np.array(finallist[0])),axis=0)
+    all_motifs=np.concatenate((noisy_motifs,clean_motifs),axis=0)
+
+    #Starts to plot the PSTH
+    spused=np.loadtxt(spikefile)
+    shoulder_beg= 0.05 #in seconds
+    shoulder_end= 0.05 #in seconds
+    meandurall=0
+    mean_nb_rendit_syl=0
+    meandurall_syl=0#mean of the durations of all syllable types
+    normfactor_mean=0
+    n_baseline=200
+    hist_bin=1
+    sig_fr=0 #value of significance of the fr(firing rate) relative to the mean fr 
+    last_syl=0
+    shift_syl_plot=0
+    shapes = (1,)
+    shapes2 = (0,)
+    f = open("CheckSylsFreq"+spikefile[:-4]+".txt", "w+")
+    # This part will result in an iteration through all the syllables, and then through all the motifs inside each syllable.
+    py.fig, ax = py.subplots(2,1, figsize=(25,12), sharey=False)
+
+	#Go through the list of segments and compute the mean duration of each segment 
+	#It is assumed the noise is output after syllable onset and ends before syllable offset
+	#Compute normfactor_mean(the number of renditions of the motif*binwidth), mean_nb_rendit_syl
+    meandurall_list = np.zeros(2*len_motif-1) #mean duration of each segment (syllable type and gaps)
+    normfactor = np.zeros(2*len_motif) #number of renditions of each segment (syllable/gap), the noisy syll is the last in the array 
+    for i in range(2*len_motif-1):
+        if(i!=2*idx_noisy_syb):
+           used_off=all_motifs[:,i+1] # sets the offsets of which syllable to use
+           used_on=all_motifs[:,i] # sets the onsets of which syllable to use
+           used_on=used_on[(np.where((used_off >0) == True))] #clean from case where the syllable is not sung
+           used_off=used_off[(np.where((used_off >0) == True))] #clean from case where the syllable is not sung
+           used_on=used_on/fs
+           used_off=used_off/fs
+
+           meandurall=np.mean(used_off[:]-used_on[:])
+           normfactor[i]=len(used_off[:])
+           meandurall_list[i]=meandurall
+           normfactor_mean=len(used_off[:]) #the mean number of motif renditions is the number of renditions of any syllable except the one that receives contingent noise
+        
+        else: #the syllable receiving contingent noise
+		   #clean versions of the syll
+           used_off=clean_motifs[:,i+1] # sets the offsets of which syllable to use: here since noise is long: take as offset the onset of the next syllable
+           used_on=clean_motifs[:,i] # sets the onsets of which syllable to use
+           used_on=used_on[(np.where((used_off >0) == True))] #clean from case where the syllable is not sung
+           used_off=used_off[(np.where((used_off >0) == True))] #clean from case where the syllable is not sung
+           used_on=used_on/fs
+           used_off=used_off/fs
+           
+           meandurall=np.mean(used_off[:]-used_on[:])
+           n_clean=len(used_off[:])
+           meandurall_list[i]=meandurall
+           normfactor[i]=len(used_off[:])
+		   
+		   #noisy versions of the syll
+           used_off=noisy_motifs[:,i+1] # sets the offsets of which syllable to use: here since noise is long: take as offset the onset of the next syllable
+           used_on=noisy_motifs[:,i] # sets the onsets of which syllable to use
+           used_on=used_on[(np.where((used_off >0) == True))] #clean from case where the syllable is not sung
+           used_off=used_off[(np.where((used_off >0) == True))] #clean from case where the syllable is not sung
+           
+           used_on=used_on/fs
+           used_off=used_off/fs
+           
+           meandurall=np.mean(used_off[:]-used_on[:])
+           n_noisy=len(used_off[:])
+           #meandurall_list[i]=((n_clean/(n_clean+n_noisy))*meandurall_list[i]+(n_noisy/(n_clean+n_noisy))*meandurall) #mean of the noisy and clean renditions of he syllable. Makes more sense to do DTW in the same way for noisy and clean syllables 
+           normfactor[-1]=len(used_off[:])
+
+		   
+    mean_nb_rendit_syl=normfactor_mean #before *binwidth, normfactor_mean is the number of motif renditions
+    normfactor_mean=normfactor_mean*binwidth
+    normfactor=normfactor*binwidth
+
+    #correct the noisy syllable: change length to average length of clean renditions
+    if (2*idx_noisy_syb==(2*len_motif-1-1)):
+       noisy_motifs[:,-1]=noisy_motifs[:,2*idx_noisy_syb]+meandurall_list[2*idx_noisy_syb]*fs
+       all_motifs=np.concatenate((noisy_motifs,clean_motifs),axis=0)
+
+    #print(meandurall_list)
+
+	#Compute the length of the x axis for the plots: shoulder_beg+meandurall_sa+shoulder_end+shoulder_beg+meandurall_sb+shoulder_end+.....
+    x_axis_length = 0
+    for i in range(2*len_motif-1):
+        x_axis_length=x_axis_length+meandurall_list[i]
+    x_axis_length=x_axis_length+shoulder_end+shoulder_beg
+
+	#Set x_axis parameters, ticks, lims, bins
+    bins=np.arange(x_axis_length+binwidth, step=binwidth)
+    ax[shapes].set_xlim(min(bins), max(bins))
+    ax[shapes2].set_xlim(min(bins), max(bins))
+    x_ticks=[]
+	
+	
+	##############################################################
+    ##x_ticks.append(min(bins))
+    #x_ax_len=shoulder_beg
+    #for i in range(2*len_motif-1): #last element of meandurall_lis is the duration of the noisy version of the syllable receiving contingent noise
+    #    x_ticks.append(x_ax_len)
+    #    x_ax_len=x_ax_len+meandurall_list[i]
+    #x_ticks.append(x_ax_len)
+    #x_ticks.append(x_ax_len+shoulder_end)
+	###############################################################
+	######################################################
+	#X ticks: only onset of syllables
+	######################################################
+    x_ax_len=shoulder_beg
+    p=0
+    x_ax_len=shoulder_beg
+    for i in range(2*len_motif-1): #last element of meandurall_lis is the duration of the noisy version of the syllable receiving contingent noise
+        x_ticks.append(x_ax_len)
+        x_ax_len=x_ax_len+meandurall_list[i]
+    x_ticks.append(x_ax_len)
+    x_ticks.append(x_ax_len+shoulder_end)
+			
+	######################################################	
+    x_ticks=np.asarray(x_ticks)
+    #ax[shapes].set_xticks([min(bins),0,meandurall_list[i],max(bins)])
+    ax[shapes].set_xticks(x_ticks)
+    ax[shapes2].set_xticks(x_ticks)
+    
+	#################################
+    # Computation of baseline
+	#################################
+    baseline_counts=[] 
+    for b in range(n_baseline):
+        baseline_counts_aux=0
+        for j in range(mean_nb_rendit_syl):
+            basecuts=np.random.choice(np.arange(basebeg,basend))
+            baseline_counts_aux+=len(spused[np.where(np.logical_and(spused >= basecuts, spused <= basecuts+binwidth) == True)]) #add number of spikes in randomly distributed bin
+        baseline_counts+=[baseline_counts_aux/normfactor_mean] #mean value of the fr computed for len(used) (i.e. the number of syll renditions) random distributions of a bin of size binwidth
+    
+    basemean=np.mean(baseline_counts) 
+    stdbase=np.ceil(np.std(baseline_counts))
+    hist_width=(int)(stdbase*10)
+    baseline_counts=baseline_counts-basemean
+    bins_base=np.arange(-hist_width,hist_width+1,hist_bin)
+    u,_=py.histogram(baseline_counts, bins_base,density=True)
+    #py.figure()
+    #py.plot(u)
+    #compute the significance level for fr beyond basemean
+    cumul_sig=0
+    mid_hist=(int)(hist_width/hist_bin)
+    #determine the level of significance for the fr (sig_fr)
+    #start from the middle of the histogram and go to the edges on both sides and count the cummulated area under the histogram till threshold of 95%
+    for j in range(hist_width):
+        cumul_sig=cumul_sig+u[mid_hist+j]*hist_bin+u[mid_hist-j]*hist_bin
+        if(cumul_sig >= 0.95):
+           break
+    	
+    sig_fr=j*hist_bin
+    #print(sig_fr)	
+
+	##############################
+	#Set axis for plot
+	##############################
+    #axis=np.arange(meandurall_list[0]/3,meandurall_list[0]*2/3,binwidth)
+    axis=np.arange(x_axis_length+binwidth, step=binwidth)
+    ax[shapes2].plot(axis,np.ones((len(axis),))*basemean, color = "g")
+    ax[shapes2].plot(axis,np.ones((len(axis),))*(basemean+sig_fr), color = "black")
+    ax[shapes2].plot(axis,np.ones((len(axis),))*(basemean-sig_fr), color = "black", ls="dashed")
+	
+    #ax[shapes2].set_title("PSTH",fontsize=18)
+    #py.fig.text(0.5, 1, "PSTH", va="center", ha="center",fontsize=20)
+    #py.fig.text(0.145, 0.97, "Syllable A", va="center", ha="left",fontsize=18)
+    #py.fig.text(0.39, 0.97, "Syllable B", va="center", ha="left",fontsize=18)
+    #py.fig.text(0.72, 0.97, "Syllable C", va="center", ha="left",fontsize=18)
+
+    for i in range(len_motif):
+        #py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)      
+        py.fig.text((x_ticks[2*i+1]+x_ticks[2*i])/(2*x_ticks[-1]), 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)  		
+
+    ax[shapes2].tick_params(
+            axis="x",          # changes apply to the x-axis
+            which="both",      # both major and minor ticks are affected
+            bottom=False,      # ticks along the bottom edge are off
+            top=False,         # ticks along the top edge are off
+            labelbottom=False)	
+    ax[shapes2].tick_params(axis='both', which='major', labelsize=18)
+    ax[shapes].tick_params(axis='both', which='major', labelsize=18)
+	
+    bins_edge=0
+    spikes2_cln=np.array([])
+    spikes2_noisy=np.array([])
+    weights_cln=np.array([],dtype=float)
+    weights_noisy=np.array([],dtype=float)
+	#treat all segments (syllables and gaps)
     for i in range(-1,2*len_motif):
 	    #treat the spikes in the shoulder window before motif onset
         if(i==-1):
@@ -3921,7 +4385,7 @@ def psth_glob_long_noise(spikefile, motifile, syllable_list,basebeg, basend,binw
            used_off=used_off/fs
            spikes1=[]
            #res=-1 continue with previous value of res
-           spikes_cln=[]
+           #spikes_cln=[]
            n0=0
            for j in range(len(used_on)):
                step1=[]
@@ -3958,9 +4422,7 @@ def psth_glob_long_noise(spikefile, motifile, syllable_list,basebeg, basend,binw
     y_cln,x1= py.histogram(spikes_cln, bins=bins, weights=weights_cln)#np.ones(len(spikes))/normfactor[0])
     y_noisy,x1= py.histogram(spikes_noisy, bins=bins, weights=weights_noisy)#np.ones(len(spikes))/normfactor[0])
 	
-    #if np.mean(y1) < 5:
-    #    f.writelines("Syllable " + str(sybs[i]) +" : " + str(np.mean(y1)) + "\n")
-	
+
 	#set new x axis by shifting the bin edges by binwidth/2
     x2=np.delete(x1,-1)
     x2=x2+binwidth/2
@@ -4009,8 +4471,6 @@ def psth_glob_long_noise(spikefile, motifile, syllable_list,basebeg, basend,binw
     #py.fig.tight_layout()
     py.fig.text(0.5, 0.02, "Time(seconds)", va="center", ha="center",fontsize=18)
     f.close()
-
-
 	
 ## 
 #
@@ -4465,8 +4925,7 @@ def psth_glob_long_noise_mixed(spikefile, motifile, syllable_list,basebeg, basen
     
 	
     return y_cln
-	
-	
+		
 ## 
 #
 # Based on psth_glob_long_noise_mixed but in case the noise is not longer than the syllable
@@ -5753,7 +6212,8 @@ def psth_glob_sep(spikefile, motifile, syllable_list, basebeg, basend,binwidth=b
     #py.fig.text(0.72, 0.97, "Syllable C", va="center", ha="left",fontsize=18)
 	
     for i in range(len_motif):
-        py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)      
+        #py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)  
+        py.fig.text((x_ticks[2*i+1]+x_ticks[2*i])/(2*x_ticks[-1]), 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)  		
 
     #py.fig.text(0.17, 0.97, "Syllable " + sybs[0], va="center", ha="left",fontsize=18)      
     #py.fig.text(0.38, 0.97, "Syllable " + sybs[1], va="center", ha="left",fontsize=18)      
@@ -6132,6 +6592,7 @@ def psth_glob_sep(spikefile, motifile, syllable_list, basebeg, basend,binwidth=b
 # basebeg is the start time for baseline computation
 #
 # basend is the end time for baseline computation    
+  
 def psth_glob_sep_long_noise(spikefile, motifile, syllable_list, basebeg, basend,binwidth=binwidth, fs=fs):      
     #sybs=["A","B","C","D"]
     #index of the noisy syllable (the syllable that received the noise on top of itself), by convention it comes after all relevant 
@@ -6148,6 +6609,42 @@ def psth_glob_sep_long_noise(spikefile, motifile, syllable_list, basebeg, basend
     clean_motifs=np.array(finallist[0])
     noisy_motifs=np.array(finallist[1])
     all_motifs=np.concatenate((np.array(finallist[0]),np.array(finallist[1])),axis=0)
+
+    shpe_c=clean_motifs.shape
+    if(2*idx_noisy_syb<(2*len_motif-1-1)): #noisy syllable is somewhere in the middle of the motif
+      nb_segments=shpe_c[1]-1
+    else:
+      nb_segments=shpe_c[1]
+	
+    clean_motifs_=np.zeros((shpe_c[0],nb_segments))
+    shpe_n=noisy_motifs.shape
+    noisy_motifs_=np.zeros((shpe_n[0],nb_segments))
+    p=0
+    for i in range(nb_segments):
+        if(i==2*idx_noisy_syb):
+          if(i<(2*len_motif-1-1)): #noisy syllable is somewhere in the middle of the motif
+            clean_motifs_[:,i]=clean_motifs[:,p]
+            noisy_motifs_[:,i]=noisy_motifs[:,p]
+            p=p+1
+          else:
+            clean_motifs_[:,i]=clean_motifs[:,p]
+            noisy_motifs_[:,i]=noisy_motifs[:,p]
+        else:
+          clean_motifs_[:,i]=clean_motifs[:,p]
+          noisy_motifs_[:,i]=noisy_motifs[:,p]
+        p=p+1
+		   
+    clean_motifs=clean_motifs_
+    noisy_motifs=noisy_motifs_
+	
+    if(2*idx_noisy_syb==(2*len_motif-1-1)): #noisy syllable is the last syllable in the motif
+      mean_off_clean=np.mean(clean_motifs[:,-1])
+      mean_off_noisy=np.mean(noisy_motifs[:,-1])
+      noisy_motifs[:,-1]=noisy_motifs[:,-1]-(mean_off_noisy-mean_off_clean)
+	  
+    #print(clean_motifs_.shape)
+    all_motifs=np.concatenate((noisy_motifs,clean_motifs),axis=0)
+	
 
     #Starts to plot the PSTH
     spused=np.loadtxt(spikefile)
@@ -6178,7 +6675,7 @@ def psth_glob_sep_long_noise(spikefile, motifile, syllable_list, basebeg, basend
     normfactor_clean = np.zeros(2*len_motif-1) #number of renditions of each syllable/gap, the noisy syll is the last in the array 
     meandurall_list_noisy = np.zeros(2*len_motif-1) #mean duration of each syllable type and gaps
     normfactor_noisy = np.zeros(2*len_motif-1) #number of renditions of each syllable/gap, the noisy syll is the last in the array 
-    for i in range(2*len_motif-1):       
+    for i in range(2*len_motif-1):
 		#clean versions of the syll
         used_off=clean_motifs[:,i+1] # sets the offsets of which syllable to use
         used_on=clean_motifs[:,i] # sets the onsets of which syllable to use
@@ -6275,21 +6772,20 @@ def psth_glob_sep_long_noise(spikefile, motifile, syllable_list, basebeg, basend
     normfactor=normfactor*binwidth	
 	
     #correct the noisy syllable: change length to average length of clean renditions
-    noisy_motifs[:,2*idx_noisy_syb+1]=noisy_motifs[:,2*idx_noisy_syb]+meandurall_list[2*idx_noisy_syb]*fs
+    if (2*idx_noisy_syb==(2*len_motif-1-1)):
+       noisy_motifs[:,-1]=noisy_motifs[:,2*idx_noisy_syb]+meandurall_list[2*idx_noisy_syb]*fs
+       all_motifs=np.concatenate((noisy_motifs,clean_motifs),axis=0)
     #all_motifs=np.concatenate((noisy_motifs,clean_motifs),axis=0)
-	
+
 	#Compute the length of the x axis for the plots: shoulder_beg+meandurall_sa+shoulder_end+shoulder_beg+meandurall_sb+shoulder_end+.....
     x_axis_length = 0
     for i in range(2*len_motif-1):
         x_axis_length=x_axis_length+meandurall_list[i]
     x_axis_length=x_axis_length+shoulder_end+shoulder_beg
 
-	#Set x_axis parameters, ticks, lims, bins
-    bins=np.arange(x_axis_length+binwidth, step=binwidth)
-    ax[shapes].set_xlim(min(bins), max(bins))
-    ax[shapes2].set_xlim(min(bins), max(bins))
+    x_ax_len=shoulder_beg
+    p=0
     x_ticks=[]
-    #x_ticks.append(min(bins))
     x_ax_len=shoulder_beg
     for i in range(2*len_motif-1): #last element of meandurall_lis is the duration of the noisy version of the syllable receiving contingent noise
         x_ticks.append(x_ax_len)
@@ -6297,10 +6793,20 @@ def psth_glob_sep_long_noise(spikefile, motifile, syllable_list, basebeg, basend
     x_ticks.append(x_ax_len)
     x_ticks.append(x_ax_len+shoulder_end)
 		
+
+	######################################################	
     x_ticks=np.asarray(x_ticks)
     #ax[shapes].set_xticks([min(bins),0,meandurall_list[i],max(bins)])
     ax[shapes].set_xticks(x_ticks)
-    ax[shapes2].set_xticks(x_ticks)
+    ax[shapes2].set_xticks(x_ticks)	
+	
+
+	#Set x_axis parameters, ticks, lims, bins
+    bins=np.arange(x_axis_length+binwidth, step=binwidth)
+    ax[shapes].set_xlim(min(bins), max(bins))
+    ax[shapes2].set_xlim(min(bins), max(bins))
+
+
     
 	#################################
     # Computation of baseline
@@ -6350,7 +6856,9 @@ def psth_glob_sep_long_noise(spikefile, motifile, syllable_list, basebeg, basend
     #py.fig.text(0.72, 0.97, "Syllable C", va="center", ha="left",fontsize=18)
 	
     for i in range(len_motif):
-        py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)      
+        #py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)  
+        py.fig.text((x_ticks[2*i+1]+x_ticks[2*i])/(2*x_ticks[-1]), 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)  		
+		
 
     #py.fig.text(0.17, 0.97, "Syllable " + sybs[0], va="center", ha="left",fontsize=18)      
     #py.fig.text(0.38, 0.97, "Syllable " + sybs[1], va="center", ha="left",fontsize=18)      
@@ -6439,7 +6947,7 @@ def psth_glob_sep_long_noise(spikefile, motifile, syllable_list, basebeg, basend
            spikes=[]
            n0=0
 		   #noisy  
-           used_on=noisy_motifs[:,i] #sets the onsets of firstt sylable in motif
+           used_on=noisy_motifs[:,i] #sets the onsets of first syllable in motif
            used_on=used_on/fs
            used_off=noisy_motifs[:,i] 
            used_off=(used_off/fs)+shoulder_end #considers the time delay due to shoulder beg
@@ -6702,7 +7210,6 @@ def psth_glob_sep_long_noise(spikefile, motifile, syllable_list, basebeg, basend
     #py.fig.tight_layout()
     py.fig.text(0.5, 0.02, "Time(seconds)", va="center", ha="center",fontsize=18)
     f.close()
-	
 
 	
 ## 
