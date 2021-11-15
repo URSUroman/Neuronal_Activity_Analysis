@@ -1846,8 +1846,10 @@ def spectrogram(songfile, beg, end, fs=fs):
 # basebeg is the start time for baseline computation
 #
 # basend is the end time for baseline computation    
-def psth(spikefile, motifile, basebeg, basend,binwidth=binwidth, fs=fs):      
+def psth(spikefile, motifile, syllable_list,basebeg, basend,binwidth=binwidth, fs=fs):      
     #sybs=["A","B","C","D"]
+    read_syllable_list(syllable_list)
+
     finallist=sortsyls(motifile,0)
     #print(finallist)
     #Starts to plot the PSTH
@@ -2649,7 +2651,8 @@ def psth_wn(spikefile, motifile,binwidth=binwidth, fs=fs):
 #
 # basebeg is the start time for baseline computation
 #
-# basend is the end time for baseline computation    
+# basend is the end time for baseline computation  
+# Be cautious, could give false psth. Function kept only for the code for lin interpol   
 def psth_glob_interpol(spikefile, motifile, basebeg, basend,binwidth=binwidth, fs=fs):      
     #sybs=["A","B","C","D"]
     #index of the noisy syllable (the syllable that received the noise on top of itself), by convention it comes after all relevant 
@@ -4654,9 +4657,13 @@ def psth_glob_long_noise_mixed(spikefile, motifile, syllable_list,basebeg, basen
     #py.fig.text(0.39, 0.97, "Syllable B", va="center", ha="left",fontsize=18)
     #py.fig.text(0.72, 0.97, "Syllable C", va="center", ha="left",fontsize=18)
 
+    #for i in range(len_motif):
+    #    py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)      
     for i in range(len_motif):
-        py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)      
+        #py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)  
+        py.fig.text((x_ticks[2*i+1]+x_ticks[2*i])/(2*x_ticks[-1]), 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)  		
 
+	
     ax[shapes2].tick_params(
             axis="x",          # changes apply to the x-axis
             which="both",      # both major and minor ticks are affected
@@ -5108,9 +5115,15 @@ def psth_glob_mixed(spikefile, motifile, syllable_list, basebeg, basend,binwidth
     #py.fig.text(0.39, 0.97, "Syllable B", va="center", ha="left",fontsize=18)
     #py.fig.text(0.72, 0.97, "Syllable C", va="center", ha="left",fontsize=18)
 
-    for i in range(len_motif):
-        py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)      
+    #for i in range(len_motif):
+    #    py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)      
 
+    for i in range(len_motif):
+        #py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)  
+        py.fig.text((x_ticks[2*i+1]+x_ticks[2*i])/(2*x_ticks[-1]), 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)  		
+
+	
+	
     ax[shapes2].tick_params(
             axis="x",          # changes apply to the x-axis
             which="both",      # both major and minor ticks are affected
@@ -5402,7 +5415,8 @@ def psth_glob_mixed(spikefile, motifile, syllable_list, basebeg, basend,binwidth
 # basebeg is the start time for baseline computation
 #
 # basend is the end time for baseline computation    
-def psth_glob_sep_interpol(spikefile, motifile, basebeg, basend,binwidth=binwidth, fs=fs):      
+# Be cautious this function is not working properly: gives wrong psth. Kept only to have the code for the lin interpol
+def psth_glob_sep_interpol(spikefile, motifile, syllable_list, basebeg, basend,binwidth=binwidth, fs=fs):      
     #sybs=["A","B","C","D"]
     #index of the noisy syllable (the syllable that received the noise on top of itself), by convention it comes after all relevant 
 	#syllables (e.g. if motif is a,b,c,d and the syll c receives noise, the labels will be a,b,c,d,e with e being noisy c)
@@ -5411,6 +5425,8 @@ def psth_glob_sep_interpol(spikefile, motifile, basebeg, basend,binwidth=binwidt
     #idx_noisy_syb = 2 #idex in syb of the relevant syb that probabilistically receives noise and that is labelled using the last label in syb. if sybs=["a","b","c","d"] and the syllable receiving noise is c (and d is thus the noisy version of c), then idx_noisy_syb = 2
     #len_motif=len(sybs)-1 #length of the motif (nb syllables)
     #nb_syls=len(sybs) #number of syllables, the noisy syllable is considered as an additional syllable
+	
+    read_syllable_list(syllable_list)
 	
     finallist=sortsyls_psth_glob(motifile,0)
     clean_motifs=np.array(finallist[0])
@@ -5609,8 +5625,12 @@ def psth_glob_sep_interpol(spikefile, motifile, basebeg, basend,binwidth=binwidt
     #py.fig.text(0.38, 0.97, "Syllable " + sybs[1], va="center", ha="left",fontsize=18)      
     #py.fig.text(0.73, 0.97, "Syllable " + sybs[2], va="center", ha="left",fontsize=18) 
 
+    #for i in range(len_motif):
+    #    py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)  
     for i in range(len_motif):
-        py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)      
+        #py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)  
+        py.fig.text((x_ticks[2*i+1]+x_ticks[2*i])/(2*x_ticks[-1]), 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)  		
+	
 	
     ax[shapes2].tick_params(
             axis="x",          # changes apply to the x-axis
@@ -7336,30 +7356,30 @@ def psth_glob_sep_no_noise(spikefile, motifile, syllable_list, basebeg, basend,b
     ax[shapes2].set_xlim(min(bins), max(bins))
     x_ticks=[]
     #x_ticks.append(min(bins))
-	#######################################################
-	##X ticks: onset and offset of syllables
-	#######################################################
-    #x_ax_len=shoulder_beg
-    #for i in range(2*len_motif-1): #last element of meandurall_lis is the duration of the noisy version of the syllable receiving contingent noise
-    #    x_ticks.append(x_ax_len)
-    #    x_ax_len=x_ax_len+meandurall_list[i]
-    #x_ticks.append(x_ax_len)
-    #x_ticks.append(x_ax_len+shoulder_end)
-	#######################################################
-
 	######################################################
-	#X ticks: only onset of syllables
+	#X ticks: onset and offset of syllables
 	######################################################
     x_ax_len=shoulder_beg
-    for i in range(len_motif): #last element of meandurall_lis is the duration of the noisy version of the syllable receiving contingent noise
+    for i in range(2*len_motif-1): #last element of meandurall_lis is the duration of the noisy version of the syllable receiving contingent noise
         x_ticks.append(x_ax_len)
-        if(i!=(len_motif-1)):
-            x_ax_len=x_ax_len+meandurall_list[2*i]+meandurall_list[2*i+1]
-        else:
-            x_ax_len=x_ax_len+meandurall_list[2*i]
+        x_ax_len=x_ax_len+meandurall_list[i]
     x_ticks.append(x_ax_len)
     x_ticks.append(x_ax_len+shoulder_end)
 	######################################################
+
+	#######################################################
+	##X ticks: only onset of syllables
+	#######################################################
+    #x_ax_len=shoulder_beg
+    #for i in range(len_motif): #last element of meandurall_lis is the duration of the noisy version of the syllable receiving contingent noise
+    #    x_ticks.append(x_ax_len)
+    #    if(i!=(len_motif-1)):
+    #        x_ax_len=x_ax_len+meandurall_list[2*i]+meandurall_list[2*i+1]
+    #    else:
+    #        x_ax_len=x_ax_len+meandurall_list[2*i]
+    #x_ticks.append(x_ax_len)
+    #x_ticks.append(x_ax_len+shoulder_end)
+	#######################################################
 
     x_ticks=np.asarray(x_ticks)
     #ax[shapes].set_xticks([min(bins),0,meandurall_list[i],max(bins)])
@@ -7413,8 +7433,11 @@ def psth_glob_sep_no_noise(spikefile, motifile, syllable_list, basebeg, basend,b
     #py.fig.text(0.46, 0.97, "Syllable " + sybs[1], va="center", ha="left",fontsize=18)      
     #py.fig.text(0.77, 0.97, "Syllable " + sybs[2], va="center", ha="left",fontsize=18) 
 	
+    #for i in range(len_motif):
+    #    py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18) 
     for i in range(len_motif):
-        py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)      
+        #py.fig.text(pos_syls_PSTH[i], 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18) 
+        py.fig.text((x_ticks[2*i+1]+x_ticks[2*i])/(2*x_ticks[-1]), 0.97, "Syllable " + sybs[i], va="center", ha="left",fontsize=18)  		
 
     ax[shapes2].tick_params(
             axis="x",          # changes apply to the x-axis
@@ -7602,7 +7625,7 @@ def psth_glob_sep_no_noise(spikefile, motifile, syllable_list, basebeg, basend,b
     py.fig.text(0.5, 0.03, "Time(seconds)", va="center", ha="center",fontsize=18)
     f.close()
 
-    return 	y_cln
+    #return 	y_cln
 
 
 	
